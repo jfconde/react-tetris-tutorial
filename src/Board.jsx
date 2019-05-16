@@ -25,13 +25,16 @@ const Board = () => {
     const [board, setBoard] = useState(initialBoard);
     const [virtualBoard, setVirtualBoard] = useState(board);
     const [currentTetromino, setCurrentTetromino] = useState(getNewTetromino());
+    const [lastMove, setLastMove] = useState(0);
+    const [timeout, setMoveTimeout] = useState(null);
     let currentBoardElement = null;
+    const resetMoveTimeout = () => { clearTimeout(timeout); setMoveTimeout(setTimeout(() => setLastMove(lastMove+1), 500)); };
+
+    useEffect(() => { currentBoardElement && currentBoardElement.focus(); }, []);
 
     useEffect(() => setVirtualBoard(board.map((row, y) =>
         row.map((block, x) => block || (currentTetromino.matrix[y - currentTetromino.y] && currentTetromino.matrix[y - currentTetromino.y][x - currentTetromino.x]) || null)
     )), [board, currentTetromino]);
-
-    useEffect(() => currentBoardElement && currentBoardElement.focus(), []);
 
     const attemptToRotateTetromino = (n) => {
         let matrix = [...currentTetromino.matrix];
@@ -39,11 +42,11 @@ const Board = () => {
             matrix = rotateTetrominoMatrix(matrix);
         }
         const tetromino = {...currentTetromino, matrix};
-        const boundsObj = tetrominoMatrixOutOfBounds (tetromino, BOARD_WIDTH, BOARD_HEIGHT);
-        !tetrominoMatrixCollides(board, tetromino) && !boundsObj.left && !boundsObj.right && !boundsObj.bottom && setCurrentTetromino(tetromino);
+        const boundsObj = tetrominoMatrixOutOfBounds(tetromino, BOARD_WIDTH, BOARD_HEIGHT);
+        !tetrominoMatrixCollides(board, tetromino) && !boundsObj.left && !boundsObj.right && !boundsObj.bottom && (resetMoveTimeout() || setCurrentTetromino(tetromino));
     };
 
-    const attemptToMoveDownTetromino = (toBottom) => {
+    const attemptToMoveDownTetromino = (toBottom = false) => {
         let tetromino = {...currentTetromino, y: currentTetromino.y + 1};
         if (toBottom) {
             while (
@@ -55,6 +58,7 @@ const Board = () => {
             tetromino.y -= 1;
             setBoard(cleanClearedLines(mergeBoardAndTetromino(board, tetromino), BOARD_WIDTH));
             setCurrentTetromino(getNewTetromino());
+            resetMoveTimeout();
             return false;
         }
 
@@ -63,12 +67,20 @@ const Board = () => {
         ) {
             setBoard(cleanClearedLines(mergeBoardAndTetromino(board, currentTetromino), BOARD_WIDTH));
             setCurrentTetromino(getNewTetromino());
+            resetMoveTimeout();
             return false;
         } else {
             setCurrentTetromino(tetromino);
+            resetMoveTimeout();
             return true;
         }
     };
+
+    useEffect(() => {
+        var x = lastMove;
+        attemptToMoveDownTetromino();
+    }, [lastMove]);
+
 
     const attemptToMoveTetromino = (right = true) => {
         const tetromino = {...currentTetromino, x: currentTetromino.x + (right ? 1 : -1)};
@@ -80,6 +92,7 @@ const Board = () => {
         }
         return false;
     };
+
 
     const onKeyDownHandler = (event) => {
         switch (event.key) {
