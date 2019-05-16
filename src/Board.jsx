@@ -1,15 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Row from './Row';
 import Block from './Block';
 
-const board = new Array(20).fill(new Array(10).fill(null));
-
-// Example to see all pieces correctly rendered:
-board[board.length-1] = ['j','l','i','o','t','s','s2', null, null, null];
+const initialBoard = new Array(20).fill(new Array(10).fill(null));
+const secondBoard = new Array(20).fill(new Array(10).fill('i'));
 
 const Board = () => {
+    const [board, setBoard] = useState(initialBoard);
+
     return (
-        <div className="tetris-board">
+        [<div className="tetris-board">
             {
                 board.map(
                     (row, i) => (
@@ -23,7 +23,8 @@ const Board = () => {
                         </Row>
                     ))
             }
-        </div>
+        </div>,
+        <input type="button" value="Change Board" onClick={() => setBoard(board === initialBoard ? secondBoard : initialBoard)} />]
     );
 };
 
