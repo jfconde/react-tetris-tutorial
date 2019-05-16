@@ -1,8 +1,8 @@
 const tetrominos = [
     [
         [null, null, null, null],
-        [null, 'l', 'l', null],
-        [null, 'l', 'l', null],
+        [null, 'o', 'o', null],
+        [null, 'o', 'o', null],
         [null, null, null, null]
     ],
     [
@@ -76,3 +76,11 @@ export const tetrominoMatrixOutOfBounds = (tetromino, width, height) =>
         }), {})),
         {}
     );
+
+export const cleanClearedLines = (board = [], lineWidth) => {
+    const withoutLinesBoard = board.filter(row => !row.every(b => !!b));
+    return [
+        ...new Array(board.length - withoutLinesBoard.length).fill(null).map(i => new Array(lineWidth).fill(null)),
+        ...withoutLinesBoard
+    ];
+};

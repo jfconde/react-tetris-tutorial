@@ -6,7 +6,8 @@ import {
     rotateTetrominoMatrix,
     tetrominoMatrixCollides,
     mergeBoardAndTetromino,
-    tetrominoMatrixOutOfBounds
+    tetrominoMatrixOutOfBounds,
+    cleanClearedLines
 } from "./util";
 
 const BOARD_WIDTH = 10;
@@ -52,7 +53,7 @@ const Board = () => {
                 tetromino = {...tetromino, y: tetromino.y + 1}
             }
             tetromino.y -= 1;
-            setBoard(mergeBoardAndTetromino(board, tetromino));
+            setBoard(cleanClearedLines(mergeBoardAndTetromino(board, tetromino), BOARD_WIDTH));
             setCurrentTetromino(getNewTetromino());
             return false;
         }
@@ -60,7 +61,7 @@ const Board = () => {
         if (tetrominoMatrixOutOfBounds(tetromino, BOARD_WIDTH, BOARD_HEIGHT).bottom
             || tetrominoMatrixCollides(board, tetromino)
         ) {
-            setBoard(mergeBoardAndTetromino(board, currentTetromino));
+            setBoard(cleanClearedLines(mergeBoardAndTetromino(board, currentTetromino), BOARD_WIDTH));
             setCurrentTetromino(getNewTetromino());
             return false;
         } else {
