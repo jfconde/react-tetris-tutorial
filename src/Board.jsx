@@ -16,13 +16,16 @@ const Board = () => {
     const [board, setBoard] = useState(initialBoard);
     const [virtualBoard, setVirtualBoard] = useState(board);
     const [currentTetromino, setCurrentTetromino] = useState(getNewTetromino());
+    let currentBoardElement = null;
 
     useEffect(() => setVirtualBoard(board.map((row, y) =>
         row.map((block, x) => block || (currentTetromino.matrix[y - currentTetromino.y] && currentTetromino.matrix[y - currentTetromino.y][x - currentTetromino.x]) || null)
     )), [board, currentTetromino]);
 
+    useEffect(() => currentBoardElement && currentBoardElement.focus(), []);
+
     return (
-        <div className="tetris-board">
+        <div className="tetris-board" tabIndex="0" ref={el => currentBoardElement = el}>
             {
                 virtualBoard.map(
                     (row, i) => (
