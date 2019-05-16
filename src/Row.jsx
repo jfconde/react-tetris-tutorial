@@ -1,8 +1,9 @@
 import React from 'react';
 
-const Row = () => {
+const Row = ({children}) => {
     return (
         <div className="row">
+            {children}
         </div>
     );
 };
