@@ -4,6 +4,9 @@ import Block from './Block';
 
 const board = new Array(20).fill(new Array(10).fill(null));
 
+// Example to see all pieces correctly rendered:
+board[board.length-1] = ['j','l','i','o','t','s','s2', null, null, null];
+
 const Board = () => {
     return (
         <div className="tetris-board">
@@ -14,7 +17,7 @@ const Board = () => {
                             {
                                 row.map(
                                     (block, j) => (
-                                        <Block key={[i,j]} />
+                                        <Block key={[i,j]} type={block} />
                                     ))
                             }
                         </Row>

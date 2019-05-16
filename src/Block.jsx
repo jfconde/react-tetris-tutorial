@@ -1,8 +1,8 @@
 import React from 'react';
 
-const Block = () => {
+const Block = ({type}) => {
     return (
-        <div className="block">
+        <div className={`block ${type}`}>
         </div>
     );
 };
