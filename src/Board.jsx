@@ -8,50 +8,95 @@ import {
     validateMovement,
     mergeBoardAndTetromino,
     codes,
-    blankBoard
+    blankBoard,
+    tetrominoMatrixOutOfBounds,
+    tetrominoMatrixCollides,
+    getSeedFn
 } from './util';
 
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
 
-const Board = () => {
+const renderBoard = board =>
+    board.map((row, i) => (
+        <Row key={i}>
+            {row.map((block, j) => (
+                <Block key={[i, j]} type={block} />
+            ))}
+        </Row>
+    ));
+
+const renderGameOver = () => <div className="overlay">Game Over</div>;
+const seed = getSeedFn ();
+// TODO: REVIEW THIS SHIT
+const initialPiece = getNewTetromino(BOARD_WIDTH, seed);
+const Board = ({ onGameOver, gameOver }) => {
     const [board, setBoard] = useState(blankBoard(BOARD_WIDTH, BOARD_HEIGHT));
     const [virtualBoard, setVirtualBoard] = useState(board);
+    const [enabled, setEnabled] = useState(true);
     const [currentTetromino, setCurrentTetromino] = useState(
-        getNewTetromino(BOARD_WIDTH)
+        initialPiece
     );
     const [movementTimeout, setMovementTimeout] = useState(null);
+    //TODO: really?
     let currentBoardElement = null;
 
-    const attemptMovement = useCallback(({ tetromino, board, ...opts }) => {
-        let next = processMovement({ tetromino, board, ...opts });
-
-        switch (
-            validateMovement({
-                tetromino: next,
-                down: opts.down,
-                board,
-                boardWidth: BOARD_WIDTH,
-                boardHeight: BOARD_HEIGHT
-            })
-        ) {
-            case codes.RET_VALID:
-                setCurrentTetromino(next);
-                break;
-            case codes.RET_MERGE:
-                setBoard(mergeBoardAndTetromino(board, tetromino, BOARD_WIDTH));
-                setCurrentTetromino(getNewTetromino(BOARD_WIDTH));
-                break;
-            default:
-            case codes.RET_NO_ACTION:
+    const attemptMovement = useCallback(
+        ({ tetromino, board, ...opts }) => {
+            if (!enabled) {
                 return;
-        }
+            }
+            let next = processMovement({ tetromino, board, ...opts });
+            let nextBoard = board;
 
-        if (opts.down || opts.fall) {
-            if (movementTimeout) clearTimeout(movementTimeout);
-            setMovementTimeout(setTimeout(() => setMovementTimeout(null), 500));
-        }
-    }, [movementTimeout]);
+            switch (
+                validateMovement({
+                    tetromino: next,
+                    down: opts.down,
+                    fall: opts.fall,
+                    board,
+                    boardWidth: BOARD_WIDTH,
+                    boardHeight: BOARD_HEIGHT
+                })
+            ) {
+                case codes.RET_VALID:
+                    setCurrentTetromino(next);
+                    break;
+                case codes.RET_MERGE:
+                    nextBoard = mergeBoardAndTetromino(
+                        board,
+                        opts.fall ? next : tetromino,
+                        BOARD_WIDTH
+                    );
+                    setBoard(nextBoard);
+                    next = getNewTetromino(BOARD_WIDTH, seed);
+                    setCurrentTetromino(next);
+                    break;
+                default:
+                case codes.RET_NO_ACTION:
+                    return;
+            }
+
+            // Check for game over condition
+            if (
+                Object.values(
+                    tetrominoMatrixOutOfBounds(next, BOARD_WIDTH, BOARD_HEIGHT)
+                ).some(Boolean) ||
+                tetrominoMatrixCollides(nextBoard, next)
+            ) {
+                onGameOver && onGameOver();
+                setEnabled(false);
+            }
+
+            if (opts.down || opts.fall) {
+                if (movementTimeout) clearTimeout(movementTimeout);
+                setMovementTimeout(
+                    setTimeout(() => setMovementTimeout(null), 1000)
+                );
+            }
+        },
+        [enabled, movementTimeout, onGameOver]
+    );
 
     const onKeyDownHandler = event => {
         let movement = null;
@@ -107,13 +152,8 @@ const Board = () => {
             ref={el => (currentBoardElement = el)}
             onKeyDown={onKeyDownHandler}
         >
-            {virtualBoard.map((row, i) => (
-                <Row key={i}>
-                    {row.map((block, j) => (
-                        <Block key={[i, j]} type={block} />
-                    ))}
-                </Row>
-            ))}
+            <div>{!gameOver && renderBoard(virtualBoard)}</div>
+            {!gameOver && renderGameOver()}
         </div>
     );
 };

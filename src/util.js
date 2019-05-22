@@ -1,17 +1,21 @@
-const tetrominos = [
-    [['o', 'o', null], ['o', 'o', null], [null, null, null]],
-    [[null, 's2', null], ['s2', 's2', null], ['s2', null, null]],
-    [['s', null, null], ['s', 's', null], [null, 's', null]],
-    [[null, 't', null], ['t', 't', 't'], [null, null, null]],
-    [
-        [null, 'i', null, null],
-        [null, 'i', null, null],
-        [null, 'i', null, null],
-        [null, 'i', null, null]
+import { send } from "q";
+
+export const tetrominos = {
+    i: [
+        ['i', 'i', 'i', 'i'],
+        [null, null, null, null],
+        [null, null, null, null],
+        [null, null, null, null]
     ],
-    [['l', null, null], ['l', null, null], ['l', 'l', null]],
-    [[null, 'j', null], [null, 'j', null], ['j', 'j', null]]
-];
+    o: [['o', 'o', null], ['o', 'o', null], [null, null, null]],
+    s: [[null, 's', 's'], ['s', 's', null], [null, null, null]],
+    s2: [['s2', 's2', null], [null, 's2', 's2'], [null, null, null]],
+    t: [['t', 't', 't'], [null, 't', null], [null, null, null]],
+    l: [['l', 'l', 'l'], ['l', null, null], [null, null, null]],
+    j: [['j', 'j', 'j'], [null, null, 'j'], [null, null, null]]
+};
+
+export const tetrominosList = Object.values(tetrominos);
 
 export const codes = {
     RET_NO_ACTION: 0,
@@ -19,8 +23,13 @@ export const codes = {
     RET_MERGE: 2
 };
 
+const getBoardSize = (board = [[]]) => ({
+    x: board[0].length,
+    y: board.length
+});
+
 export const getRandomTetromino = () =>
-    tetrominos[Math.round(Math.random() * (tetrominos.length - 1))];
+    tetrominosList[Math.round(Math.random() * (tetrominosList.length - 1))];
 
 export const rotateTetromino = (tetromino, n) => {
     return {
@@ -98,13 +107,27 @@ export const tetrominoMatrixOutOfBounds = (tetromino, width, height) =>
         {}
     );
 
-export const getNewTetromino = boardWidth => {
-    const tetromino = getRandomTetromino();
+export const getNewTetromino = (boardWidth, seed = null) => {
+    const tetromino = seed ? seed() : getRandomTetromino();
     return {
-        x: boardWidth / 2 - tetromino.length,
+        x: parseInt(boardWidth / 2) - Math.trunc(tetromino.length / 2),
         y: 0,
         matrix: tetromino
     };
+};
+
+export const getLowestPosition = (board, tetromino) => {
+    const { x, y } = getBoardSize(board);
+    let retVal = { ...tetromino };
+    while (
+        !Object.values(tetrominoMatrixOutOfBounds(retVal, x, y)).some(
+            Boolean
+        ) &&
+        !tetrominoMatrixCollides(board, retVal)
+    ) {
+        retVal = { ...retVal, y: retVal.y + 1 };
+    }
+    return { ...retVal, y: retVal.y - 1 };
 };
 
 export const processMovement = ({
@@ -116,6 +139,7 @@ export const processMovement = ({
     tetromino,
     board
 }) => {
+    const { x, y } = getBoardSize(board);
     if (left) {
         return { ...tetromino, x: tetromino.x - 1 };
     } else if (right) {
@@ -124,26 +148,41 @@ export const processMovement = ({
         return { ...tetromino, y: tetromino.y + 1 };
     } else if (rotate) {
         return rotateTetromino(tetromino, rotate);
+    } else if (fall) {
+        return getLowestPosition(board, tetromino);
     }
     return tetromino;
 };
 
-export const getVirtualBoard = (board, currentTetromino) =>
-    board.map((row, y) =>
-        row.map(
-            (block, x) =>
+export const getVirtualBoard = (board, currentTetromino) => {
+    const ghostTetramino = getLowestPosition(board, currentTetromino);
+    return board.map((row, y) =>
+        row.map((block, x) => {
+            const tetraminoBlock =
+                currentTetromino.matrix[y - currentTetromino.y] &&
+                currentTetromino.matrix[y - currentTetromino.y][
+                    x - currentTetromino.x
+                ];
+
+            const ghostTetraminoBlock =
+                ghostTetramino.matrix[y - ghostTetramino.y] &&
+                ghostTetramino.matrix[y - ghostTetramino.y][
+                    x - ghostTetramino.x
+                ];
+
+            return (
                 block ||
-                (currentTetromino.matrix[y - currentTetromino.y] &&
-                    currentTetromino.matrix[y - currentTetromino.y][
-                        x - currentTetromino.x
-                    ]) ||
-                null
-        )
+                (tetraminoBlock && `${tetraminoBlock} falling`) ||
+                (ghostTetraminoBlock ? `${ghostTetraminoBlock} ghost` : null)
+            );
+        })
     );
+};
 
 export const validateMovement = ({
     tetromino,
     down = false,
+    fall = false,
     board,
     boardWidth,
     boardHeight
@@ -156,8 +195,8 @@ export const validateMovement = ({
     const outOfBounds = Object.values(boundsObj).some(Boolean);
     const collision = tetrominoMatrixCollides(board, tetromino);
 
-    if (outOfBounds || collision) {
-        return down ? codes.RET_MERGE : codes.RET_NO_ACTION;
+    if (outOfBounds || collision || fall) {
+        return down || fall ? codes.RET_MERGE : codes.RET_NO_ACTION;
     } else {
         return codes.RET_VALID;
     }
@@ -165,3 +204,25 @@ export const validateMovement = ({
 
 export const blankBoard = (w, h) =>
     new Array(h).fill(null).map(i => new Array(w).fill(null));
+
+export const getSeedFn = () => {
+    let seen = [];
+    const keys = Object.keys(tetrominos);
+    const keyL = keys.length;
+    const getNextKey = () => keys[Math.trunc(Math.random() * keyL)];
+
+    return () => {
+        debugger
+        if (seen.length === keyL) 
+            seen.splice(0, seen.length);;
+
+        let key;
+        do {
+            key = getNextKey();
+        }
+        while (seen.includes(key));
+
+        seen.push(key);
+        return tetrominos[key];
+    };
+}
