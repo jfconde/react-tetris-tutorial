@@ -1,5 +1,3 @@
-import { send } from "q";
-
 export const tetrominos = {
     i: [
         ['i', 'i', 'i', 'i'],
