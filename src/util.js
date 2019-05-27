@@ -210,7 +210,6 @@ export const getSeedFn = () => {
     const getNextKey = () => keys[Math.trunc(Math.random() * keyL)];
 
     return () => {
-        debugger
         if (seen.length === keyL) 
             seen.splice(0, seen.length);;
 

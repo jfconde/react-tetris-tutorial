@@ -1,6 +1,9 @@
 body {
     background: #000;
     text-align: center;
+    color: #fff;
+    font-family: 'Dosis', sans-serif;
+    font-size: 18px;
 }
 
 * {
@@ -8,8 +11,43 @@ body {
     padding: 0;
 }
 
+.game {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.game .left-container,
+.game .right-container {
+    display: inline-block;
+    width: auto;
+    flex: 1;
+    padding: 20px;
+    min-width: 120px;
+}
+
+.game .left-container {
+    text-align: right;
+}
+
+.game .right-container {
+    text-align: left;
+}
+
+.game .side-widget {
+    font-size: 20px;
+}
+
+.game .side-widget.line-counter .number {
+    letter-spacing: 4px;
+}
+
+.game .side-widget.line-counter .number.leading-zero {
+    opacity: 0.3;
+}
+
 .tetris-board {
-    display: block;
+    display: inline=block;
     border: solid 3px #499fe3;
     width: 300px;
     height: 600px;
@@ -27,6 +65,7 @@ body {
     display: block;
     margin: 0;
     width: 100%;
+    line-height: 0;
 }
 
 .tetris-board .row .block {
@@ -66,7 +105,6 @@ body {
     background: #004ef52e;
 }
 
-
 /*
 .tetris-board .row .block.l {
     background-image: url(/images/l-block.png);
@@ -96,3 +134,43 @@ body {
     background-image: url(/images/t-block.png);
 }
 */
+
+.slide-character {
+    overflow: hidden;
+    display: inline-block;
+    margin: 2px;
+    line-height: 30px;
+    height: 30px;
+    width: 18px;
+    text-align: center;
+}
+
+.slide-character span {
+    display: block;
+    position: relative;
+    line-height: 30px;
+    height: 30px;
+    transition: all linear 1s;
+}
+
+.slide-character span.transition {
+    
+}
+
+.slide-character .current-letter {
+    top: 0;
+}
+
+.slide-character .current-letter.transition {
+    top: -100%;
+}
+
+.slide-character .next-letter {
+    top: 100%;
+}
+
+.slide-character .next-letter.transition {
+    top: -100%;
+}
+
+@import url('https://fonts.googleapis.com/css?family=Dosis:400,700&display=swap');
