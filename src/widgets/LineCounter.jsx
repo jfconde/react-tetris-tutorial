@@ -29,7 +29,7 @@ const getLineDigits = (count = 0, numDigits = 4) => {
 const LineCounter = ({ lines = 0 }) => {
     const [n, setN] = useState(0);
     useEffect(() => {
-        const t = setTimeout(() => setN(n + 1), 700);
+        const t = setTimeout(() => setN(n + 33), 700);
         return () => clearTimeout(t);
     }, [n]);
 

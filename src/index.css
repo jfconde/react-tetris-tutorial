@@ -150,11 +150,10 @@ body {
     position: relative;
     line-height: 30px;
     height: 30px;
-    transition: all linear 1s;
 }
 
 .slide-character span.transition {
-    
+
 }
 
 .slide-character .current-letter {
@@ -163,6 +162,7 @@ body {
 
 .slide-character .current-letter.transition {
     top: -100%;
+    transition: all linear 1s;
 }
 
 .slide-character .next-letter {
@@ -171,6 +171,8 @@ body {
 
 .slide-character .next-letter.transition {
     top: -100%;
+    transition: all linear 1s;
 }
 
 @import url('https://fonts.googleapis.com/css?family=Dosis:400,700&display=swap');
+

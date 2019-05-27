@@ -1,33 +1,37 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 
-const SlideCharacter = ({ letter = ' ' }) => {
+const SlideCharacter = ({className = '', letter = ' '}) => {
     const [currentLetter, setCurrentLetter] = useState(letter || ' ');
-    const [nextLetter, setNextLetter] = useState(letter || ' ');
+    const nextLetter = useRef(letter || ' ');
     const [inTransition, setInTransition] = useState(false);
 
-    useEffect(() => {
-        if (letter === nextLetter) return;
-        if (inTransition) {
-            //setNextLetter(letter);
-        } else {
-            setNextLetter(letter);
-            setInTransition(true);
-            setTimeout(() => {
-                setInTransition(false);
-            }, 1000);
-        }
-    }, [inTransition, letter, nextLetter]);
+    const cL = useRef(null);
+    const nL = useRef(null);
 
     useEffect(() => {
-        if (!inTransition) {
-            setCurrentLetter(nextLetter);
-        }
-    }, [inTransition, nextLetter, letter]);
+        if (letter === currentLetter || inTransition) return;
+
+        nextLetter.current = letter;
+        setTimeout(() => {
+            if (letter !== currentLetter) {
+                setCurrentLetter(letter);
+            }
+            setInTransition(false);
+        }, 1000);
+        setInTransition(true);
+
+    }, [inTransition, letter, nextLetter, currentLetter]);
+
+    useEffect( () => {
+        debugger
+        setCurrentLetter(letter);
+        nextLetter.current = letter;
+    }, []);
 
     return (
-        <div className="slide-character">
-            <span className={`current-letter ${inTransition ? 'transition' : ''}`}>{currentLetter}</span>
-            <span className={`next-letter ${inTransition ? 'transition' : ''}`}>{nextLetter}</span>
+        <div className={`slide-character ${className}`}>
+            <span ref={cL} className={`current-letter ${inTransition ? 'transition' : ''}`}>{currentLetter}</span>
+            <span ref={nL} className={`next-letter ${inTransition ? 'transition' : ''}`}>{nextLetter.current || ''}</span>
         </div>
     );
 };
